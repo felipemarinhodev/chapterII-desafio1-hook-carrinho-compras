@@ -69,9 +69,13 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
   const removeProduct = (productId: number) => {
     try {
-      // TODO
+      const cartAux = Object.assign(cart);
+      const productIndex = cart.findIndex(product => product.id === productId);
+      
+      cartAux.splice(productIndex, 1)
+      setCart([...cartAux])
     } catch {
-      // TODO
+      toast.error('Erro na remoção do produto');
     }
   };
 
