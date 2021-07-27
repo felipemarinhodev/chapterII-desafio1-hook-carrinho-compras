@@ -23,59 +23,55 @@ interface CartItemsAmount {
 
 const Home = (): JSX.Element => {
   const [products, setProducts] = useState<ProductFormatted[]>([]);
-  // const { addProduct, cart } = useCart();
+  const { addProduct, cart } = useCart();
 
-  // const cartItemsAmount = cart.reduce((sumAmount, product) => {
-  //   // TODO
-  // }, {} as CartItemsAmount)
+  const cartItemsAmount = (productId: number): number => {
+  const result = cart.find((product) => product.id === productId)
+  return result ? result.amount : 0;
+  }
 
   useEffect(() => {
     async function loadProducts() {
       const products = (await api
         .get('products')
         .then((result) => result.data)) as ProductFormatted[];
-      
+
       const productsFormatted = products.map((product) => {
         return {
           ...product,
-          priceFormatted: formatPrice(product.price)
-          
-        }
+          priceFormatted: formatPrice(product.price),
+        };
       });
-      setProducts(productsFormatted)
+      setProducts(productsFormatted);
     }
 
     loadProducts();
   }, []);
 
-  function handleAddProduct(id: number) {
-    // TODO
+  async function handleAddProduct(id: number) {
+    await addProduct(id);
   }
 
   return (
     <ProductList>
-      {products.map(product => (
+      {products.map((product) => (
         <li key={product.id}>
-          <img
-            src={product.image}
-            alt={product.title}
-          />
+          <img src={product.image} alt={product.title} />
           <strong>{product.title}</strong>
           <span>{product.priceFormatted}</span>
           <button
             type="button"
             data-testid="add-product-button"
-            // onClick={() => handleAddProduct(product.id)}
+            onClick={() => handleAddProduct(product.id)}
           >
             <div data-testid="cart-product-quantity">
               <MdAddShoppingCart size={16} color="#FFF" />
-              {/* {cartItemsAmount[product.id] || 0} */} 2
+              {cartItemsAmount(product.id)}
             </div>
 
             <span>ADICIONAR AO CARRINHO</span>
           </button>
         </li>
-
       ))}
     </ProductList>
   );
