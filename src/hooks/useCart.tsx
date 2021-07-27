@@ -40,16 +40,14 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
   useEffect(() => {
     if (cart) {
-      localStorage.setItem('@RocketShoes:cart', JSON.stringify(cart))
+      localStorage.setItem('@RocketShoes:cart', JSON.stringify(cart));
     }
-    console.log(`O cart mudou: ${JSON.stringify(cart)}`);
   }, [cart]);
 
   const addProduct = async (productId: number) => {
     try {
-      // TODO
       const productSelected = cart.find((product) => product.id === productId);
-      await checkIfHasProductInStock(productId, productSelected?.amount);
+      await checkIfHasProductInStock(productId, 1);
 
       if (productSelected) {
         productSelected.amount += 1;
@@ -63,17 +61,19 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
       setCart((products) => [...products, { ...productSelect, amount: 1 }]);
     } catch {
-      // TODO
+      toast.error('Erro na adição do produto');
     }
   };
 
   const removeProduct = (productId: number) => {
     try {
       const cartAux = Object.assign(cart);
-      const productIndex = cart.findIndex(product => product.id === productId);
-      
-      cartAux.splice(productIndex, 1)
-      setCart([...cartAux])
+      const productIndex = cart.findIndex(
+        (product) => product.id === productId
+      );
+
+      cartAux.splice(productIndex, 1);
+      setCart([...cartAux]);
     } catch {
       toast.error('Erro na remoção do produto');
     }
@@ -85,10 +85,10 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
   }: UpdateProductAmount) => {
     try {
       const productSelected = cart.find((product) => product.id === productId);
-      await checkIfHasProductInStock(productId, productSelected?.amount);
+      await checkIfHasProductInStock(productId, amount);
 
       if (productSelected) {
-        productSelected.amount += 1;
+        productSelected.amount = amount;
         setCart((products) => [...products]);
         return;
       }
@@ -104,16 +104,19 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       {children}
     </CartContext.Provider>
   );
-}
 
-async function checkIfHasProductInStock(productId: number, amount: number = 0) {
-  const amountInStock = await api
-    .get(`stock/${productId}`)
-    .then((result) => result.data.amount);
+  async function checkIfHasProductInStock(productId: number, amount: number) {
+    if (amount < 1) {
+      throw new Error('Não é possível reduzir a quantidade está no limite.');
+    }
+    const amountInStock = await api
+      .get(`stock/${productId}`)
+      .then((result) => result.data.amount);
 
-  if (!amountInStock || amount + 1 > amountInStock) {
-    toast.error('Quantidade solicitada fora de estoque');
-    throw new Error('Quantidade solicitada fora de estoque');
+    if (!amountInStock || amount > amountInStock) {
+      toast.error('Quantidade solicitada fora de estoque');
+      throw new Error('Quantidade solicitada fora de estoque');
+    }
   }
 }
 
